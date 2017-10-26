@@ -5,6 +5,7 @@ import json
 import requests
 import scrapy
 from pymongo import MongoClient
+from concurrent.futures import ThreadPoolExecutor
 
 # Connect with mongodb server
 DB = MongoClient('localhost', 27017)
@@ -13,6 +14,8 @@ INDEX = DB.mangafox.index
 
 # Interval in seconds between two successive update of manga details
 UPDATE_INTERVAL = 10 * 3600     # 10 hours
+# Maximum number concurrent threads
+MAX_CONCURRENT_THREAD = 25
 
 
 class MangafoxSpider(scrapy.Spider):
@@ -21,20 +24,24 @@ class MangafoxSpider(scrapy.Spider):
     """
     name = 'mangafox'
 
-    start_urls = ['https://mangafox.me/manga/']
+    start_urls = [
+        'https://mangafox.me/manga/'
+    ]
 
     def parse(self, response):
         selector = 'div.manga_list ul li a'
-        for item in response.css(selector):
-            sid = item.css('::attr(rel)').extract_first()
-            save_item({
-                'sid': sid,
-                'title': item.css('::text').extract_first(),
-                'link': response.urljoin(item.css('::attr(href)').extract_first()),
-                'completed': len(item.css('.manga_close')) == 1
-            })
-            update_details(sid)
-        # end for
+        with ThreadPoolExecutor(MAX_CONCURRENT_THREAD) as executor:
+            for item in response.css(selector):
+                sid = int(item.css('::attr(rel)').extract_first())
+                save_item({
+                    'sid': sid,
+                    'title': item.css('::text').extract_first(),
+                    'link': response.urljoin(item.css('::attr(href)').extract_first()),
+                    'completed': len(item.css('.manga_close')) == 1
+                })
+                executor.submit(update_details, sid)
+            # end for
+        # end with
     # end def
 # end class
 
@@ -72,7 +79,7 @@ def update_details(sid):
             'details': get_details(sid)
         }
         INDEX.update(query, {'$set': update})
-        logging.info('Details updated: ' + sid)
+        logging.debug('Details updated: ' + sid)
     # end if
 # end def
 
