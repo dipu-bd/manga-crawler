@@ -16,7 +16,6 @@ class MangafoxSpider(scrapy.Spider):
     def parse(self, response):
         selector = 'div.manga_list ul li a'
         for item in response.css(selector):
-            item = response.css(selector)[0]
             sid = item.css('::attr(rel)').extract_first()
             yield {
                 'sid': sid,
@@ -25,7 +24,7 @@ class MangafoxSpider(scrapy.Spider):
                 'completed': len(item.css('.manga_close')) == 1,
                 'details': self.get_details(sid)
             }
-            logging.debug('Crawled ' + sid)
+            logging.info('Crawled ' + sid)
         # end for
     # end def
 
