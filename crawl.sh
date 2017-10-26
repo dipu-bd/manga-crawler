@@ -1,2 +1,1 @@
-rm -rf downloads/
-scrapy crawl mangafox -o downloads/mangafox.json -L INFO
+scrapy crawl mangafox -s LOG_FILE=logs/scrapy.log
