@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Scrapy settings for mangafox_crawler project
+# Scrapy settings for manga_crawler project
 #
 # For simplicity, this file contains only settings considered important or
 # commonly used. You can find more settings consulting the documentation:
@@ -9,14 +9,14 @@
 #     http://scrapy.readthedocs.org/en/latest/topics/downloader-middleware.html
 #     http://scrapy.readthedocs.org/en/latest/topics/spider-middleware.html
 
-BOT_NAME = 'mangafox_crawler'
+BOT_NAME = 'manga_crawler'
 
-SPIDER_MODULES = ['mangafox_crawler.spiders']
-NEWSPIDER_MODULE = 'mangafox_crawler.spiders'
+SPIDER_MODULES = ['manga_crawler.spiders']
+NEWSPIDER_MODULE = 'manga_crawler.spiders'
 
 
 # Crawl responsibly by identifying yourself (and your website) on the user-agent
-#USER_AGENT = 'mangafox_crawler (+http://www.yourdomain.com)'
+#USER_AGENT = 'manga_crawler (+http://www.yourdomain.com)'
 
 # Obey robots.txt rules
 ROBOTSTXT_OBEY = True
@@ -47,13 +47,13 @@ ROBOTSTXT_OBEY = True
 # Enable or disable spider middlewares
 # See http://scrapy.readthedocs.org/en/latest/topics/spider-middleware.html
 #SPIDER_MIDDLEWARES = {
-#    'mangafox_crawler.middlewares.MangafoxCrawlerSpiderMiddleware': 543,
+#    'manga_crawler.middlewares.MangafoxCrawlerSpiderMiddleware': 543,
 #}
 
 # Enable or disable downloader middlewares
 # See http://scrapy.readthedocs.org/en/latest/topics/downloader-middleware.html
 #DOWNLOADER_MIDDLEWARES = {
-#    'mangafox_crawler.middlewares.MyCustomDownloaderMiddleware': 543,
+#    'manga_crawler.middlewares.MyCustomDownloaderMiddleware': 543,
 #}
 
 # Enable or disable extensions
@@ -65,7 +65,7 @@ ROBOTSTXT_OBEY = True
 # Configure item pipelines
 # See http://scrapy.readthedocs.org/en/latest/topics/item-pipeline.html
 #ITEM_PIPELINES = {
-#    'mangafox_crawler.pipelines.MangafoxCrawlerPipeline': 300,
+#    'manga_crawler.pipelines.MangafoxCrawlerPipeline': 300,
 #}
 
 # Enable and configure the AutoThrottle extension (disabled by default)
