@@ -30,58 +30,18 @@ class MangafoxSpider(scrapy.Spider):
 
     def parse(self, response):
         selector = 'div.manga_list ul li a'
-        with ThreadPoolExecutor(MAX_CONCURRENT_THREAD) as executor:
-            for item in response.css(selector):
-                sid = int(item.css('::attr(rel)').extract_first())
-                save_item({
-                    'sid': sid,
-                    'title': item.css('::text').extract_first(),
-                    'link': response.urljoin(item.css('::attr(href)').extract_first()),
-                    'completed': len(item.css('.manga_close')) == 1
-                })
-                executor.submit(update_details, sid)
-            # end for
-        # end with
+        for item in response.css(selector):
+            sid = int(item.css('::attr(rel)').extract_first())
+            save_item({
+                'sid': sid,
+                'title': item.css('::text').extract_first(),
+                'link': response.urljoin(item.css('::attr(href)').extract_first()),
+                'completed': len(item.css('.manga_close')) == 1
+            })
+        # end for
+        check_details()
     # end def
 # end class
-
-
-def save_item(item):
-    """
-    Update or create a new item if does not exists
-    """
-    query = {'sid': item['sid']}
-    update = {'$set': item}
-    INDEX.update(query, update, upsert=True)
-# end def
-
-
-def update_details(sid):
-    """
-    Updates the details field if necessary
-    """
-    query = {'sid': sid}
-    cursor = INDEX.find(query)
-    if cursor.count() < 0:
-        return
-    # end if
-
-    item = cursor.next()
-    should_udpate = True
-    if 'updated_at' in item:
-        delta = (datetime.now() - item['updated_at'])
-        should_udpate = (delta.total_seconds() > UPDATE_INTERVAL)
-    # end if
-
-    if should_udpate:
-        update = {
-            'updated_at': datetime.now(),
-            'details': get_details(sid)
-        }
-        INDEX.update(query, {'$set': update})
-        logging.debug('Details updated: ' + sid)
-    # end if
-# end def
 
 
 def get_details(sid):
@@ -106,3 +66,42 @@ def get_details(sid):
         'cover': result[10]
     }
 # end def
+
+
+def save_item(item):
+    """
+    Update or create a new item if does not exists
+    """
+    query = {'sid': item['sid']}
+    update = {'$set': item}
+    INDEX.update(query, update, upsert=True)
+# end def
+
+
+def check_details():
+    """
+    Updates the details field if necessary
+    """
+    with ThreadPoolExecutor(100) as executor:
+        for item in INDEX.find({}):
+            if 'updated_at' in item:
+                delta = (datetime.now() - item['updated_at'])
+                if delta.total_seconds() < UPDATE_INTERVAL:
+                    continue
+                # end if
+            # end if
+            executor.submit(update_details, item['sid'])
+        # end for
+    # end with
+# end def
+
+
+def update_details(sid):
+    """Update the details of manga"""
+    update = {
+        'updated_at': datetime.now(),
+        'details': get_details(sid)
+    }
+    INDEX.update({'sid': sid}, {'$set': update})
+    logging.debug('Details updated: ' + sid)
+# end save_details
