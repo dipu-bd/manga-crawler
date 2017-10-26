@@ -10,7 +10,7 @@ from concurrent.futures import ThreadPoolExecutor
 # Connect with mongodb server
 DB = MongoClient('localhost', 27017)
 # Collection where manga index are stored
-INDEX = DB.mangafox.index
+INDEX = DB.mangadb.mangafox
 
 # Interval in seconds between two successive update of manga details
 UPDATE_INTERVAL = 10 * 3600     # 10 hours
