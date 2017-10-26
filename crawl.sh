@@ -1,1 +1,0 @@
-scrapy crawl mangafox -s LOG_FILE=logs/scrapy.log
