@@ -23,10 +23,8 @@ class MangafoxSpider(scrapy.Spider):
     Crawler to grab list of Manga from MangaFox
     """
     name = 'mangafox'
-
-    start_urls = [
-        'https://mangafox.me/manga/'
-    ]
+    allowed_domains = ['mangafox.me']
+    start_urls = ['https://mangafox.me/manga/']
 
     def parse(self, response):
         selector = 'div.manga_list ul li a'
