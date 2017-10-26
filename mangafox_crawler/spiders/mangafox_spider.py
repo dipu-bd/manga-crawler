@@ -15,7 +15,7 @@ INDEX = DB.mangafox.index
 # Interval in seconds between two successive update of manga details
 UPDATE_INTERVAL = 10 * 3600     # 10 hours
 # Maximum number concurrent threads
-MAX_CONCURRENT_THREAD = 25
+MAX_CONCURRENT_THREAD = 100
 
 
 class MangafoxSpider(scrapy.Spider):
