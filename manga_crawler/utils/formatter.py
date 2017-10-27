@@ -1,6 +1,7 @@
 # -*- conding: utf-8 -*-
 import json
 import bleach
+import dateparser
 from urllib.parse import parse_qsl
 
 def parseJson(val):
@@ -21,6 +22,10 @@ def parseFloat(val):
 
 def parseOrdinal(val):
     return parseInt(''.join(filter(str.isdigit, str(val))))
+# end def
+
+def parseDate(val):
+    return dateparser.parse(val)
 # end def
 
 def cleanStr(val):

@@ -6,7 +6,7 @@ Or `scrapy runspider mangafox_genres.py` to directly run this file.
 import logging
 import scrapy
 
-LOG = logging.getLogger('mangafox_index')
+LOG = logging.getLogger('mangafox_genres')
 
 class MangafoxGenreSpider(scrapy.Spider):
     """
