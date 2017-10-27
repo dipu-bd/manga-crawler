@@ -3,7 +3,10 @@
 Call `scrapy crawl mangafox_genres` from top directory.
 Or `scrapy runspider mangafox_genres.py` to directly run this file.
 """
+import logging
 import scrapy
+
+LOG = logging.getLogger('mangafox_index')
 
 class MangafoxGenreSpider(scrapy.Spider):
     """
@@ -18,9 +21,9 @@ class MangafoxGenreSpider(scrapy.Spider):
 
     def parse(self, response):
         """Parse all genres"""
-        self.log('Parsing genres: ' + response.url)
-        selector = '#advoptions #searcharea ul#genres li'
-        for item in response.css(selector):
+        items = response.css('#advoptions #searcharea ul#genres li')
+        LOG.info('Parsing %d items from %s', len(items), response.url)
+        for item in items:
             title = item.css('a.tips::text').extract_first()
             detail = item.css('a.tips::attr(title)').extract_first()
             yield {
