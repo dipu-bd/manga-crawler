@@ -14,8 +14,6 @@ BOT_NAME = 'manga_crawler'
 SPIDER_MODULES = ['manga_crawler.spiders']
 NEWSPIDER_MODULE = 'manga_crawler.spiders'
 
-LOG_FILE = 'scrapy.log'
-
 MAX_WORKER = 100
 MONGO_URI = 'mongodb://localhost:27017'
 
@@ -27,7 +25,7 @@ USER_AGENT = "Mozilla/5.0 (Windows NT 6.2; WOW64) AppleWebKit/537.36 (KHTML, lik
 ROBOTSTXT_OBEY = True
 
 # Configure maximum concurrent requests performed by Scrapy (default: 16)
-CONCURRENT_REQUESTS = 128
+CONCURRENT_REQUESTS = 512
 
 # Configure a delay for requests for the same website (default: 0)
 # See http://scrapy.readthedocs.org/en/latest/topics/settings.html#download-delay
