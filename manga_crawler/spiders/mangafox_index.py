@@ -43,7 +43,7 @@ class MangafoxIndexSpider(scrapy.Spider):
         result = json.loads(response.text)
         query = parse_qs(response.request.body.decode("utf-8"))
         yield {
-            'sid': query['sid'][0],
+            'sid': int(query['sid'][0]),
             'name': result[0],
             'alternate_names': [s.strip() for s in result[1].split(';')],
             'genres': [s.strip() for s in result[2].split(',')],
