@@ -3,9 +3,8 @@
 Call `scrapy crawl mangafox_index` from top directory.
 Or `scrapy runspider mangafox_index.py` to directly run this file.
 """
-from urllib.parse import parse_qs
-import json
 import scrapy
+import utils.formatter as F
 
 class MangafoxIndexSpider(scrapy.Spider):
     """
@@ -23,16 +22,17 @@ class MangafoxIndexSpider(scrapy.Spider):
         self.log('Parsing index: ' + response.url)
         selector = 'div.manga_list ul li a'
         for item in response.css(selector):
-            sid = int(item.css('::attr(rel)').extract_first())
+            sid = item.css('::attr(rel)').extract_first()
+            link = item.css('::attr(href)').extract_first()
             yield {
-                'sid': sid,
+                'sid': F.parseInt(sid),
                 'title': item.css('::text').extract_first(),
-                'link': response.urljoin(item.css('::attr(href)').extract_first()),
+                'link': response.urljoin(link),
                 'completed': len(item.css('.manga_close')) == 1
             }
             yield scrapy.FormRequest(
                 url='http://mangafox.me/ajax/series.php',
-                formdata={'sid': str(sid)},
+                formdata={'sid': sid},
                 callback=self.parse_details)
         # end for
     # end def
@@ -40,21 +40,21 @@ class MangafoxIndexSpider(scrapy.Spider):
     def parse_details(self, response):
         """Parse details information"""
         self.log('In parse_details(): ' + response.url)
-        result = json.loads(response.text)
-        query = parse_qs(response.request.body.decode("utf-8"))
+        result = F.parseJson(response.text)
+        query = F.parseQuery(response.request.body)
         yield {
-            'sid': int(query['sid'][0]),
-            'name': result[0],
-            'alternate_names': [s.strip() for s in result[1].split(';')],
-            'genres': [s.strip() for s in result[2].split(',')],
-            'author': result[3],
-            'artist': result[4],
-            'rank': int(''.join([x for x in result[5] if x.isdigit()])),
-            'stars': int(result[6]),
-            'rating': float(result[7]),
-            'year': int(result[8]),
-            'description': result[9],
-            'cover': result[10]
+            'sid': F.parseInt(query['sid']),
+            'name': F.cleanStr(result[0]),
+            'alternate_names': F.splitStr(result[1], ';'),
+            'genres': F.splitStr(result[2], ','),
+            'author': F.cleanStr(result[3]),
+            'artist': F.cleanStr(result[4]),
+            'rank': F.parseOrdinal(result[5]),
+            'stars': F.parseInt(result[6]),
+            'rating': F.parseFloat(result[7]),
+            'year': F.parseInt(result[8]),
+            'description': F.cleanStr(result[9]),
+            'cover': F.cleanStr(result[10])
         }
     # end def
 # end class
