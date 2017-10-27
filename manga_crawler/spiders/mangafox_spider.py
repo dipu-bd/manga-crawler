@@ -34,17 +34,14 @@ from pymongo import MongoClient
 from concurrent.futures import ThreadPoolExecutor
 
 # Connect with mongodb server
-DB = MongoClient('localhost', 27017).mangadb
+DB = MongoClient('localhost', 27017)
 # Collections where manga info are stored
-META = DB.meta
-INDEX = DB.mangafox_index
-GENRES = DB.mangafox_genres
-AUTHORS = DB.mangafox_authors
+INDEX = DB.mangafox.index
+GENRES = DB.mangafox.genres
 
 # Maximum number concurrent threads
-MAX_CONCURRENT_THREAD = 100
-# Interval in seconds between two successive update
-UPDATE_INTERVAL_DETAILS = 2 * 24 * 3600     # 10 hours
+MAX_WORKER = 250
+EXECUTOR = ThreadPoolExecutor(MAX_WORKER)
 
 
 class MangafoxSpider(scrapy.Spider):
@@ -56,19 +53,41 @@ class MangafoxSpider(scrapy.Spider):
     start_urls = ['https://mangafox.me/manga/']
 
     def parse(self, response):
+        # Store list of manga
         selector = 'div.manga_list ul li a'
         for item in response.css(selector):
-            sid = int(item.css('::attr(rel)').extract_first())
-            save_item({
-                'sid': sid,
+            EXECUTOR.submit(process_item, {
+                'sid': int(item.css('::attr(rel)').extract_first()),
                 'title': item.css('::text').extract_first(),
                 'link': response.urljoin(item.css('::attr(href)').extract_first()),
                 'completed': len(item.css('.manga_close')) == 1
             })
         # end for
-        check_details()
     # end def
 # end class
+
+
+def save_item(item):
+    """
+    Update or create a new item if does not exists
+    """
+    INDEX.update({'sid': item['sid']}, {'$set': item}, upsert=True)
+# end def
+
+
+def process_item(item):
+    save_item(item)                         # save item to databasae
+    EXECUTOR.submit(update_details, item)   # run update details task
+# end def
+
+
+def update_details(item):
+    """Update the details of manga"""
+    details = get_details(item['sid'])  # get details
+    item.update(details)                # merge details with item
+    save_item(item)                     # save item
+    logging.debug('Item processed: ' + item['sid'])
+# end save_details
 
 
 def get_details(sid):
@@ -85,50 +104,12 @@ def get_details(sid):
         'genres': [s.strip() for s in result[2].split(',')],
         'author': result[3],
         'artist': result[4],
-        'rank': ''.join([x for x in result[5] if x.isdigit()]),
-        'stars': result[6],
-        'rating': result[7],
-        'year': result[8],
+        'rank': int(''.join([x for x in result[5] if x.isdigit()])),
+        'stars': int(result[6]),
+        'rating': float(result[7]),
+        'year': int(result[8]),
         'description': result[9],
-        'cover': result[10]
+        'cover': result[10],
+        'last_update': datetime.now()
     }
-# end def
-
-
-def save_item(item):
-    """
-    Update or create a new item if does not exists
-    """
-    query = {'sid': item['sid']}
-    update = {'$set': item}
-    INDEX.update(query, update, upsert=True)
-# end def
-
-
-def update_details(sid):
-    """Update the details of manga"""
-    update = {
-        'updated_at': datetime.now(),
-        'details': get_details(sid)
-    }
-    INDEX.update({'sid': sid}, {'$set': update})
-    logging.debug('Details updated: ' + sid)
-# end save_details
-
-
-def check_details():
-    """
-    Updates the details field if necessary
-    """
-    with ThreadPoolExecutor(100) as executor:
-        for item in INDEX.find({}):
-            if 'updated_at' in item:
-                delta = (datetime.now() - item['updated_at'])
-                if delta.total_seconds() < UPDATE_INTERVAL_DETAILS:
-                    continue
-                # end if
-            # end if
-            executor.submit(update_details, item['sid'])
-        # end for
-    # end with
 # end def
