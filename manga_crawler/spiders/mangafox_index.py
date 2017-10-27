@@ -48,16 +48,16 @@ class MangafoxIndexSpider(scrapy.Spider):
         yield {
             'sid': F.parseInt(query['sid']),
             'name': F.cleanStr(result[0]),
-            'alternate_names': F.splitStr(result[1], ';'),
+            'alternate_names': F.splitStr(F.cleanStr(result[1]), ';'),
             'genres': F.splitStr(result[2], ','),
             'author': F.cleanStr(result[3]),
             'artist': F.cleanStr(result[4]),
             'rank': F.parseOrdinal(result[5]),
-            'stars': F.parseInt(result[6]),
+            'stars': result[6],
             'rating': F.parseFloat(result[7]),
             'year': F.parseInt(result[8]),
             'description': F.cleanStr(result[9]),
-            'cover': F.cleanStr(result[10])
+            'cover': result[10]
         }
     # end def
 # end class
