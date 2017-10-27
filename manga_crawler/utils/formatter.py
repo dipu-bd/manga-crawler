@@ -1,14 +1,14 @@
 # -*- conding: utf-8 -*-
 import json
 import bleach
-from urllib.parse import parse_qs
+from urllib.parse import parse_qsl
 
 def parseJson(val):
     return json.loads(val)
 # end def
 
 def parseQuery(val):
-    return parse_qs(val.decode("utf-8"))
+    return dict(parse_qsl(val.decode("utf-8")))
 # end def
 
 def parseInt(val):
