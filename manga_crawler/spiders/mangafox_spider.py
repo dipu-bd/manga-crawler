@@ -1,5 +1,8 @@
+"""
+Call `scrapy crawl mangafox` from top directory.
+Or `scrapy runspider mangafox_spider.py` for this file only.
+"""
 # -*- coding: utf-8 -*-
-
 # MIT License
 #
 # Copyright (c) 2017 Sudipto Chandra
@@ -31,14 +34,17 @@ from pymongo import MongoClient
 from concurrent.futures import ThreadPoolExecutor
 
 # Connect with mongodb server
-DB = MongoClient('localhost', 27017)
-# Collection where manga index are stored
-INDEX = DB.mangadb.mangafox
+DB = MongoClient('localhost', 27017).mangadb
+# Collections where manga info are stored
+META = DB.meta
+INDEX = DB.mangafox_index
+GENRES = DB.mangafox_genres
+AUTHORS = DB.mangafox_authors
 
-# Interval in seconds between two successive update of manga details
-UPDATE_INTERVAL = 10 * 3600     # 10 hours
 # Maximum number concurrent threads
 MAX_CONCURRENT_THREAD = 100
+# Interval in seconds between two successive update
+UPDATE_INTERVAL_DETAILS = 2 * 24 * 3600     # 10 hours
 
 
 class MangafoxSpider(scrapy.Spider):
@@ -99,24 +105,6 @@ def save_item(item):
 # end def
 
 
-def check_details():
-    """
-    Updates the details field if necessary
-    """
-    with ThreadPoolExecutor(100) as executor:
-        for item in INDEX.find({}):
-            if 'updated_at' in item:
-                delta = (datetime.now() - item['updated_at'])
-                if delta.total_seconds() < UPDATE_INTERVAL:
-                    continue
-                # end if
-            # end if
-            executor.submit(update_details, item['sid'])
-        # end for
-    # end with
-# end def
-
-
 def update_details(sid):
     """Update the details of manga"""
     update = {
@@ -126,3 +114,21 @@ def update_details(sid):
     INDEX.update({'sid': sid}, {'$set': update})
     logging.debug('Details updated: ' + sid)
 # end save_details
+
+
+def check_details():
+    """
+    Updates the details field if necessary
+    """
+    with ThreadPoolExecutor(100) as executor:
+        for item in INDEX.find({}):
+            if 'updated_at' in item:
+                delta = (datetime.now() - item['updated_at'])
+                if delta.total_seconds() < UPDATE_INTERVAL_DETAILS:
+                    continue
+                # end if
+            # end if
+            executor.submit(update_details, item['sid'])
+        # end for
+    # end with
+# end def
