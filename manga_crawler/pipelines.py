@@ -4,10 +4,8 @@
 #
 # Don't forget to add your pipeline to the ITEM_PIPELINES setting
 # See: http://doc.scrapy.org/en/latest/topics/item-pipeline.html
-import logging
 from datetime import datetime
 from pymongo import MongoClient
-from concurrent.futures import ThreadPoolExecutor
 
 
 class MongoPipeline(object):
@@ -17,9 +15,7 @@ class MongoPipeline(object):
 
     def __init__(self, mongo_uri, db_name, max_worker):
         self.mongo_uri = mongo_uri
-        self.max_worker = max_worker
         self.db_name = db_name
-        self.pool = None
         self.client = None
         self.dbc = None
     # end def
@@ -40,8 +36,6 @@ class MongoPipeline(object):
         """
         Initializes db when the spider is opened
         """
-        # Create thread pool
-        self.pool = ThreadPoolExecutor(self.max_worker)
         # Connect with mongodb server
         self.client = MongoClient(self.mongo_uri)
         self.dbc = self.client[self.db_name][spider.name]
@@ -51,7 +45,6 @@ class MongoPipeline(object):
         """
         Terminates things the spider is closed
         """
-        self.pool.shutdown()
         self.client.close()
     # end df
 
@@ -60,7 +53,7 @@ class MongoPipeline(object):
         Process an item produced by the spider
         """
         key = spider.primary_key
-        self.pool.submit(self.save_item, item, key)  #.add_done_callback(self.on_item_saved)
+        return self.save_item(item, key)
         #return item
     # end def
 
@@ -70,12 +63,5 @@ class MongoPipeline(object):
         """
         item.update({'last_update': datetime.now()})
         return self.dbc.update({key: item[key]}, {'$set': item}, upsert=True)
-    # end def
-
-    def on_item_saved(self, future):
-        """
-        Process result after storing item in the database
-        """
-        logging.getLogger('item save callback').debug(future.result())
     # end def
 # end class
