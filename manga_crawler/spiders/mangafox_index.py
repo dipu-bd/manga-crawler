@@ -3,8 +3,11 @@
 Call `scrapy crawl mangafox_index` from top directory.
 Or `scrapy runspider mangafox_index.py` to directly run this file.
 """
+import logging
 import scrapy
-import utils.formatter as F
+from ..utils import formatter as F
+
+LOG = logging.getLogger('mangafox_index')
 
 class MangafoxIndexSpider(scrapy.Spider):
     """
@@ -19,9 +22,9 @@ class MangafoxIndexSpider(scrapy.Spider):
 
     def parse(self, response):
         """Parse list of manga"""
-        self.log('Parsing index: ' + response.url)
-        selector = 'div.manga_list ul li a'
-        for item in response.css(selector):
+        items = response.css('div.manga_list ul li a')
+        LOG.info('Parsing %d items from %s', len(items), response.url)
+        for item in items:
             sid = item.css('::attr(rel)').extract_first()
             link = item.css('::attr(href)').extract_first()
             yield {
@@ -33,13 +36,13 @@ class MangafoxIndexSpider(scrapy.Spider):
             yield scrapy.FormRequest(
                 url='http://mangafox.me/ajax/series.php',
                 formdata={'sid': sid},
-                callback=self.parse_details)
+                callback=self.parse_details
+            )
         # end for
     # end def
 
     def parse_details(self, response):
         """Parse details information"""
-        self.log('In parse_details(): ' + response.url)
         result = F.parseJson(response.text)
         query = F.parseQuery(response.request.body)
         yield {
