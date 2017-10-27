@@ -37,7 +37,7 @@ from concurrent.futures import ThreadPoolExecutor
 DB = MongoClient('localhost', 27017)
 # Collections where manga info are stored
 INDEX = DB.mangafox.index
-GENRES = DB.mangafox.genres
+GENRE = DB.mangafox.genres
 
 # Maximum number concurrent threads
 MAX_WORKER = 250
@@ -50,18 +50,35 @@ class MangafoxSpider(scrapy.Spider):
     """
     name = 'mangafox'
     allowed_domains = ['mangafox.me']
-    start_urls = ['https://mangafox.me/manga/']
+    start_urls = [
+        'https://mangafox.me/manga/',
+        'https://mangafox.me/search.php'
+    ]
 
     def parse(self, response):
         # Store list of manga
         selector = 'div.manga_list ul li a'
         for item in response.css(selector):
-            EXECUTOR.submit(process_item, {
+            data = {
                 'sid': int(item.css('::attr(rel)').extract_first()),
                 'title': item.css('::text').extract_first(),
                 'link': response.urljoin(item.css('::attr(href)').extract_first()),
                 'completed': len(item.css('.manga_close')) == 1
-            })
+            }
+            save_item(data)                         # save item to databasae
+            EXECUTOR.submit(update_details, data)   # run update details task
+        # end for
+
+        # Store genres
+        selector = '#advoptions #searcharea ul#genres li'
+        for item in response.css(selector):
+            title = item.css('a.tips::text').extract_first()
+            detail = item.css('a.tips::attr(title)').extract_first()
+            data = {
+                'title': title,
+                'detail': detail[len(title + ' - '):]
+            }
+            save_genre(item)
         # end for
     # end def
 # end class
@@ -75,9 +92,11 @@ def save_item(item):
 # end def
 
 
-def process_item(item):
-    save_item(item)                         # save item to databasae
-    EXECUTOR.submit(update_details, item)   # run update details task
+def save_genre(item):
+    """
+    Update or create a new item if does not exists
+    """
+    GENRE.update({'title': item['title']}, {'$set': item}, upsert=True)
 # end def
 
 
@@ -99,7 +118,7 @@ def get_details(sid):
     response = requests.post(url, data=payload)
     result = json.loads(response.text)
     return {
-        'display_name': result[0],
+        'name': result[0],
         'alternate_names': [s.strip() for s in result[1].split(';')],
         'genres': [s.strip() for s in result[2].split(',')],
         'author': result[3],
