@@ -12,21 +12,21 @@ def parseQuery(val):
 # end def
 
 def parseInt(val):
-    return int('0' + cleanStr(val))
+    return int('0' + str(val))
 # end def
 
 def parseFloat(val):
-    return float('0' + cleanStr(val))
+    return float('0' + str(val))
 # end def
 
 def parseOrdinal(val):
-    return parseInt(''.join(filter(str.isdigit, val)))
+    return parseInt(''.join(filter(str.isdigit, str(val))))
 # end def
 
 def cleanStr(val):
-    return bleach.clean(str(val), tags=[], strip=True).strip()
+    return bleach.clean(str(val), tags=[], strip=True).replace('\x00', '').strip()
 # end def
 
 def splitStr(val, sep):
-    return [s.strip() for s in cleanStr(val).split(sep)]
+    return [s.strip() for s in str(val).split(sep)]
 # end def
