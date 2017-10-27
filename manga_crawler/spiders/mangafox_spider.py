@@ -40,7 +40,7 @@ INDEX = DB.mangafox.index
 GENRE = DB.mangafox.genres
 
 # Maximum number concurrent threads
-MAX_WORKER = 250
+MAX_WORKER = 200
 EXECUTOR = ThreadPoolExecutor(MAX_WORKER)
 
 
@@ -78,7 +78,7 @@ class MangafoxSpider(scrapy.Spider):
                 'title': title,
                 'detail': detail[len(title + ' - '):]
             }
-            EXECUTOR.submit(save_genre, item)
+            EXECUTOR.submit(save_genre, data)
         # end for
     # end def
 # end class
