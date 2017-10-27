@@ -78,7 +78,7 @@ class MangafoxSpider(scrapy.Spider):
                 'title': title,
                 'detail': detail[len(title + ' - '):]
             }
-            save_genre(item)
+            EXECUTOR.submit(save_genre, item)
         # end for
     # end def
 # end class
