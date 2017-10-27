@@ -9,7 +9,7 @@ class MangafoxGenreSpider(scrapy.Spider):
     """
     Crawler to grab list of Manga from MangaFox
     """
-    name = 'mangafox_genres'
+    name = 'mangafox-genres'
     allowed_domains = ['mangafox.me']
     start_urls = ['https://mangafox.me/search.php']
 
