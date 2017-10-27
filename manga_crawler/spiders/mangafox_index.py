@@ -11,9 +11,12 @@ class MangafoxIndexSpider(scrapy.Spider):
     """
     Crawler to grab list of Manga from MangaFox
     """
-    name = 'mangafox-index'
+    name = 'mangafox_index'
     allowed_domains = ['mangafox.me']
     start_urls = ['https://mangafox.me/manga/']
+
+    db_name = 'mangafox'
+    primary_key = 'sid'
 
     def parse(self, response):
         """Parse list of manga"""

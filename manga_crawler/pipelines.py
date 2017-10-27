@@ -4,21 +4,10 @@
 #
 # Don't forget to add your pipeline to the ITEM_PIPELINES setting
 # See: http://doc.scrapy.org/en/latest/topics/item-pipeline.html
+
 from datetime import datetime
 from pymongo import MongoClient
 from concurrent.futures import ThreadPoolExecutor
-
-# Spider names
-MANGAFOX_INDEX = 'mangafox-index'
-MANGAFOX_GENRES = 'mangafox-genres'
-
-# Connect with mongodb server
-DB = MongoClient('localhost', 27017)
-
-# Maximum number concurrent threads
-MAX_WORKER = 100
-EXECUTOR = ThreadPoolExecutor(MAX_WORKER)
-
 
 
 class MangaCrawlerPipeline(object):
@@ -26,34 +15,59 @@ class MangaCrawlerPipeline(object):
     All crawled items are passed through this pipeline
     """
 
+    def __init__(self, mongo_uri, max_worker):
+        self.mongo_uri = mongo_uri
+        self.max_worker = max_worker
+        self.pool = None
+        self.client = None
+        self.dbc = None
+    # end def
+
+    @classmethod
+    def from_crawler(cls, crawler):
+        """
+        Passes settings to the class constructor
+        """
+        return cls(
+            mongo_uri=crawler.settings.get('MONGO_URI'),
+            max_worker=crawler.settings.get('MAX_WORKER'),
+        )
+    # end def
+
+    def open_spider(self, spider):
+        """
+        Initializes db when the spider is opened
+        """
+        # Create thread pool
+        self.pool = ThreadPoolExecutor(self.max_worker)
+        # Connect with mongodb server
+        self.client = MongoClient(self.mongo_uri)
+        self.dbc = self.client[spider.db_name][spider.name]
+    # end def
+
+    def close_spider(self, spider):
+        """
+        Terminates things the spider is closed
+        """
+        self.pool.shutdown()
+        self.client.close()
+    # end df
+
     def process_item(self, item, spider):
         """
         Process an item produced by the spider
         """
-        if spider.name == MANGAFOX_INDEX:
-            EXECUTOR.submit(save_item, 'mangafox', 'index', item)
-        elif spider.name == MANGAFOX_GENRES:
-            EXECUTOR.submit(save_genre, 'mangafox', 'genres', item)
-        else:
-            return item
-        # end if
+        key = spider.primary_key
+        return self.save_item(item, key)
+        #self.pool.submit(self.save_item, item, key)
+    # end def
+
+    def save_item(self, item, key):
+        """
+        Save item to database
+        """
+        item.update({'last_update': datetime.now()})
+        self.dbc.update({key: item[key]}, {'$set': item}, upsert=True)
+        return item
     # end def
 # end class
-
-
-def save_item(dbname, collection, item):
-    """
-    Update or create a new item if does not exists
-    """
-    item.update('last_update', datetime.now())
-    DB[dbname][collection].update({'sid': item['sid']}, {'$set': item}, upsert=True)
-# end def
-
-
-def save_genre(dbname, collection, item):
-    """
-    Update or create a new item if does not exists
-    """
-    item.update('last_update', datetime.now())
-    DB[dbname][collection].update({'title': item['title']}, {'$set': item}, upsert=True)
-# end def
