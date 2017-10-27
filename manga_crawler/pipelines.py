@@ -10,14 +10,15 @@ from pymongo import MongoClient
 from concurrent.futures import ThreadPoolExecutor
 
 
-class MangaCrawlerPipeline(object):
+class MongoPipeline(object):
     """
     All crawled items are passed through this pipeline
     """
 
-    def __init__(self, mongo_uri, max_worker):
+    def __init__(self, mongo_uri, db_name, max_worker):
         self.mongo_uri = mongo_uri
         self.max_worker = max_worker
+        self.db_name = db_name
         self.pool = None
         self.client = None
         self.dbc = None
@@ -30,6 +31,7 @@ class MangaCrawlerPipeline(object):
         """
         return cls(
             mongo_uri=crawler.settings.get('MONGO_URI'),
+            db_name=crawler.settings.get('MONGO_DBNAME'),
             max_worker=crawler.settings.get('MAX_WORKER'),
         )
     # end def
@@ -42,7 +44,7 @@ class MangaCrawlerPipeline(object):
         self.pool = ThreadPoolExecutor(self.max_worker)
         # Connect with mongodb server
         self.client = MongoClient(self.mongo_uri)
-        self.dbc = self.client[spider.db_name][spider.name]
+        self.dbc = self.client[self.db_name][spider.name]
     # end def
 
     def close_spider(self, spider):
@@ -58,8 +60,8 @@ class MangaCrawlerPipeline(object):
         Process an item produced by the spider
         """
         key = spider.primary_key
-        self.pool.submit(self.save_item, item, key).add_done_callback(self.on_item_saved)
-        return item
+        self.pool.submit(self.save_item, item, key)  #.add_done_callback(self.on_item_saved)
+        #return item
     # end def
 
     def save_item(self, item, key):

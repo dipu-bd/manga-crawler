@@ -16,7 +16,6 @@ class MangafoxGenreSpider(scrapy.Spider):
     allowed_domains = ['mangafox.me']
     start_urls = ['https://mangafox.me/search.php']
 
-    db_name = 'mangafox'
     primary_key = 'title'
 
     def parse(self, response):

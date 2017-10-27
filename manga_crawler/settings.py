@@ -14,8 +14,9 @@ BOT_NAME = 'manga_crawler'
 SPIDER_MODULES = ['manga_crawler.spiders']
 NEWSPIDER_MODULE = 'manga_crawler.spiders'
 
-MAX_WORKER = 100
+MAX_WORKER = 512
 MONGO_URI = 'mongodb://localhost:27017'
+MONGO_DBNAME = 'mangadb'
 
 #LOG_ENABLED = False
 #LOG_LEVEL = INFO
@@ -35,8 +36,8 @@ CONCURRENT_REQUESTS = 512
 # See also autothrottle settings and docs
 DOWNLOAD_DELAY = 0.005
 # The download delay setting will honor only one of:
-CONCURRENT_REQUESTS_PER_DOMAIN = 256
-CONCURRENT_REQUESTS_PER_IP = 256
+CONCURRENT_REQUESTS_PER_DOMAIN = 128
+CONCURRENT_REQUESTS_PER_IP = 128
 
 # Disable cookies (enabled by default)
 COOKIES_ENABLED = False
@@ -71,7 +72,7 @@ TELNETCONSOLE_ENABLED = False
 # Configure item pipelines
 # See http://scrapy.readthedocs.org/en/latest/topics/item-pipeline.html
 ITEM_PIPELINES = {
-    'manga_crawler.pipelines.MangaCrawlerPipeline': 300,
+    'manga_crawler.pipelines.MongoPipeline': 100,
 }
 
 # Enable and configure the AutoThrottle extension (disabled by default)
@@ -83,7 +84,7 @@ AUTOTHROTTLE_START_DELAY = 3
 AUTOTHROTTLE_MAX_DELAY = 30
 # The average number of requests Scrapy should be sending in parallel to
 # each remote server
-AUTOTHROTTLE_TARGET_CONCURRENCY = 256
+AUTOTHROTTLE_TARGET_CONCURRENCY = 128
 # Enable showing throttling stats for every response received:
 #AUTOTHROTTLE_DEBUG = False
 

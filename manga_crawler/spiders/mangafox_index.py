@@ -17,7 +17,6 @@ class MangafoxIndexSpider(scrapy.Spider):
     allowed_domains = ['mangafox.me']
     start_urls = ['https://mangafox.me/manga/']
 
-    db_name = 'mangafox'
     primary_key = 'sid'
 
     def parse(self, response):
