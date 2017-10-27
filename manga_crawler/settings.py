@@ -14,11 +14,11 @@ BOT_NAME = 'manga_crawler'
 SPIDER_MODULES = ['manga_crawler.spiders']
 NEWSPIDER_MODULE = 'manga_crawler.spiders'
 
-LOG_FILE = 'scrapy.log'
+#LOG_FILE = 'scrapy.log'
 
 # Crawl responsibly by identifying yourself (and your website) on the user-agent
 #USER_AGENT = 'manga_crawler (+http://www.yourdomain.com)'
-USER_AGENT = "Mozilla/5.0 (Windows NT 6.2; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/27.0.1453.93 Safari/537.36"
+#USER_AGENT = "Mozilla/5.0 (Windows NT 6.2; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/27.0.1453.93 Safari/537.36"
 
 # Obey robots.txt rules
 ROBOTSTXT_OBEY = True
@@ -49,7 +49,7 @@ COOKIES_ENABLED = False
 # Enable or disable spider middlewares
 # See http://scrapy.readthedocs.org/en/latest/topics/spider-middleware.html
 #SPIDER_MIDDLEWARES = {
-#    'manga_crawler.middlewares.MangafoxCrawlerSpiderMiddleware': 543,
+#    'manga_crawler.middlewares.MangaCrawlerSpiderMiddleware': 543,
 #}
 
 # Enable or disable downloader middlewares
@@ -67,7 +67,7 @@ COOKIES_ENABLED = False
 # Configure item pipelines
 # See http://scrapy.readthedocs.org/en/latest/topics/item-pipeline.html
 #ITEM_PIPELINES = {
-#    'manga_crawler.pipelines.MangafoxCrawlerPipeline': 300,
+#    'manga_crawler.pipelines.MangaCrawlerPipeline': 300,
 #}
 
 # Enable and configure the AutoThrottle extension (disabled by default)
