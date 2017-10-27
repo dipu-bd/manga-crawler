@@ -4,7 +4,7 @@
 #
 # Don't forget to add your pipeline to the ITEM_PIPELINES setting
 # See: http://doc.scrapy.org/en/latest/topics/item-pipeline.html
-
+import logging
 from datetime import datetime
 from pymongo import MongoClient
 from concurrent.futures import ThreadPoolExecutor
@@ -58,8 +58,8 @@ class MangaCrawlerPipeline(object):
         Process an item produced by the spider
         """
         key = spider.primary_key
-        return self.save_item(item, key)
-        #self.pool.submit(self.save_item, item, key)
+        self.pool.submit(self.save_item, item, key).add_done_callback(self.on_item_saved)
+        return item
     # end def
 
     def save_item(self, item, key):
@@ -67,7 +67,13 @@ class MangaCrawlerPipeline(object):
         Save item to database
         """
         item.update({'last_update': datetime.now()})
-        self.dbc.update({key: item[key]}, {'$set': item}, upsert=True)
-        return item
+        return self.dbc.update({key: item[key]}, {'$set': item}, upsert=True)
+    # end def
+
+    def on_item_saved(self, future):
+        """
+        Process result after storing item in the database
+        """
+        logging.getLogger('item save callback').debug(future.result())
     # end def
 # end class
